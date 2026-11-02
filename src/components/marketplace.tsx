@@ -235,8 +235,12 @@ export default function Marketplace() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(Object.fromEntries(form.entries())),
       });
-      const result = await response.json() as { user?: NonNullable<User>; error?: string; message?: string };
-      if (!response.ok || !result.user) throw new Error(result.error ?? "We couldn’t sign you in.");
+      const result = await response.json().catch(() => null) as { user?: NonNullable<User>; error?: string; message?: string } | null;
+      if (!response.ok || !result?.user) {
+        throw new Error(result?.error ?? (response.ok
+          ? "The account service returned an invalid response."
+          : "Account service is temporarily unavailable. Please try again shortly."));
+      }
       if (adminLogin && result.user.role !== "admin") {
         throw new Error("That account does not have administrator access.");
       }

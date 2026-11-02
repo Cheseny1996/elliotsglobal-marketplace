@@ -23,6 +23,13 @@ export async function POST(request: Request) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === 11000) {
       return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
     }
-    throw error;
+    console.error("Account registration failed.", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      errorCode: typeof error === "object" && error !== null && "code" in error ? error.code : undefined,
+    });
+    return NextResponse.json(
+      { error: "Account creation is temporarily unavailable. Please try again shortly." },
+      { status: 503 },
+    );
   }
 }
