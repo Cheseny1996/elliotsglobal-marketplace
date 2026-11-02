@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types } from "mongoose";
 
-type UserRole = "shopper" | "seller" | "admin";
+type UserRole = "shopper" | "seller" | "fan" | "candidate" | "admin";
 type SellerStatus = "not_applicable" | "pending" | "approved" | "rejected";
 type ProductStatus = "pending" | "active" | "rejected" | "archived";
 type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "expired";
@@ -76,7 +76,7 @@ const userSchema = new Schema<UserRecord>(
     passwordResetTokenHash: { type: String, select: false, index: true, sparse: true },
     passwordResetExpiresAt: { type: Date, select: false },
     passwordResetRequestedAt: { type: Date, select: false },
-    role: { type: String, enum: ["shopper", "seller", "admin"], required: true },
+    role: { type: String, enum: ["shopper", "seller", "fan", "candidate", "admin"], required: true },
     sellerStatus: {
       type: String,
       enum: ["not_applicable", "pending", "approved", "rejected"],

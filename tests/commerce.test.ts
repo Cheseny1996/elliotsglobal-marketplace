@@ -11,10 +11,10 @@ import {
 } from "../src/lib/validation";
 
 test("catalog preview spans the planned departments with a broad sample range", () => {
-  assert.equal(demoProducts.length, 36);
+  assert.equal(demoProducts.length, 41);
   assert.deepEqual(new Set(demoProducts.map((product) => product.category)), new Set(categories.slice(1)));
   assert.equal(new Set(demoProducts.map((product) => product.id)).size, demoProducts.length);
-  assert.equal(categories.length, 13);
+  assert.equal(categories.length, 14);
   assert.ok(demoProducts.some((product) => product.price < product.compareAt));
 });
 

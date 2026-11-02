@@ -7,7 +7,7 @@ import { User } from "@/lib/models";
 
 const COOKIE_NAME = "elliotsglobal_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-const roles = ["shopper", "seller", "admin"] as const;
+const roles = ["shopper", "seller", "fan", "candidate", "admin"] as const;
 const sellerStatuses = ["not_applicable", "pending", "approved", "rejected"] as const;
 
 function sessionSecret() {
@@ -22,7 +22,7 @@ export type SessionUser = {
   id: string;
   name: string;
   email: string;
-  role: "shopper" | "seller" | "admin";
+  role: "shopper" | "seller" | "fan" | "candidate" | "admin";
   sellerStatus: "not_applicable" | "pending" | "approved" | "rejected";
   storeName?: string;
 };
@@ -31,7 +31,7 @@ export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
-  role: "shopper" | "seller";
+  role: "shopper" | "seller" | "fan" | "candidate";
   storeName?: string;
 }) {
   await connectToDatabase();

@@ -9,7 +9,7 @@ export const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(254),
   password: passwordSchema,
-  role: z.enum(["shopper", "seller"]),
+  role: z.enum(["shopper", "seller", "fan", "candidate"]),
   storeName: z.string().trim().min(2).max(100).optional(),
 }).refine((value) => value.role !== "seller" || Boolean(value.storeName), {
   path: ["storeName"],
