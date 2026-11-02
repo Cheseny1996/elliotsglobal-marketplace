@@ -5,10 +5,13 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
+  ChevronDown,
+  ChevronUp,
   Heart,
   Minus,
   Plus,
   Search,
+  Share2,
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
@@ -17,8 +20,9 @@ import {
   Store,
   Truck,
   X,
+  ZoomIn,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { categories, categoryCollections, demoProducts, productImage, type CatalogProduct } from "@/lib/catalog";
@@ -35,6 +39,20 @@ type AuthMode = "login" | "register" | "forgot";
 type ProductSort = "featured" | "price-low" | "price-high" | "top-rated";
 
 const money = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+const PRODUCT_NAVIGATION_EVENT = "marketplace-product-navigation";
+
+function subscribeToProductNavigation(callback: () => void) {
+  window.addEventListener("popstate", callback);
+  window.addEventListener(PRODUCT_NAVIGATION_EVENT, callback);
+  return () => {
+    window.removeEventListener("popstate", callback);
+    window.removeEventListener(PRODUCT_NAVIGATION_EVENT, callback);
+  };
+}
+
+function getSelectedProductId() {
+  return new URLSearchParams(window.location.search).get("find");
+}
 
 export default function Marketplace() {
   const [products, setProducts] = useState<CatalogProduct[]>(demoProducts);
@@ -44,7 +62,11 @@ export default function Marketplace() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [liked, setLiked] = useState<string[]>([]);
-  const [selected, setSelected] = useState<CatalogProduct | null>(null);
+  const selectedProductId = useSyncExternalStore(subscribeToProductNavigation, getSelectedProductId, () => null);
+  const selected = products.find((product) => product.id === selectedProductId) ?? null;
+  const [detailQuantity, setDetailQuantity] = useState(1);
+  const [galleryZoom, setGalleryZoom] = useState(1);
+  const [openProductSections, setOpenProductSections] = useState<string[]>(["about"]);
   const [cartOpen, setCartOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -151,6 +173,20 @@ export default function Marketplace() {
   }, []);
 
   useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedProduct(null);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
+
+  useEffect(() => {
     const target = new Date("2026-11-27T00:00:00-05:00").getTime();
     const updateCountdown = () => setSecondsLeft(Math.max(0, Math.floor((target - Date.now()) / 1000)));
     const initialTimer = window.setTimeout(updateCountdown, 0);
@@ -204,6 +240,8 @@ export default function Marketplace() {
     product: products.find((product) => product.id === line.id),
   })).filter((line): line is CartLine & { product: CatalogProduct } => Boolean(line.product));
   const subtotal = cartItems.reduce((total, line) => total + line.product.price * line.quantity, 0);
+  const selectedCartQuantity = selected ? cart.find((line) => line.id === selected.id)?.quantity ?? 0 : 0;
+  const selectedQuantityLimit = Math.max(20 - selectedCartQuantity, 0);
   const countdown = [
     Math.floor(secondsLeft / 86400),
     Math.floor((secondsLeft % 86400) / 3600),
@@ -211,14 +249,54 @@ export default function Marketplace() {
     secondsLeft % 60,
   ];
 
-  function addToCart(product: CatalogProduct) {
+  function showProductDetails(product: CatalogProduct) {
+    setDetailQuantity(1);
+    setGalleryZoom(1);
+    setOpenProductSections(["about"]);
+    setSelectedProduct(product);
+  }
+
+  function setSelectedProduct(product: CatalogProduct | null) {
+    const url = new URL(window.location.href);
+    if (product) url.searchParams.set("find", product.id);
+    else url.searchParams.delete("find");
+    window.history.replaceState({}, "", url);
+    window.dispatchEvent(new Event(PRODUCT_NAVIGATION_EVENT));
+  }
+
+  function addToCart(product: CatalogProduct, quantity = 1) {
+    const alreadyInBag = cart.find((line) => line.id === product.id)?.quantity ?? 0;
+    const quantityToAdd = Math.min(quantity, 20 - alreadyInBag);
+    if (quantityToAdd <= 0) {
+      setNotice("Your bag already has the maximum of 20 for this find.");
+      return;
+    }
     setCart((current) => {
       const existing = current.find((line) => line.id === product.id);
       return existing
-        ? current.map((line) => line.id === product.id ? { ...line, quantity: Math.min(line.quantity + 1, 20) } : line)
-        : [...current, { id: product.id, quantity: 1 }];
+        ? current.map((line) => line.id === product.id ? { ...line, quantity: line.quantity + quantityToAdd } : line)
+        : [...current, { id: product.id, quantity: quantityToAdd }];
     });
-    setNotice(`${product.name} added to your bag.`);
+    setNotice(quantityToAdd === 1
+      ? `${product.name} added to your bag.`
+      : `${quantityToAdd} × ${product.name} added to your bag.`);
+  }
+
+  function toggleProductSection(section: string) {
+    setOpenProductSections((current) => current.includes(section)
+      ? current.filter((item) => item !== section)
+      : [...current, section]);
+  }
+
+  async function shareProduct(product: CatalogProduct) {
+    const shareUrl = new URL("/", window.location.origin);
+    shareUrl.searchParams.set("find", product.id);
+    try {
+      await navigator.clipboard.writeText(shareUrl.toString());
+      setNotice("Product link copied. Share a little goodness.");
+    } catch {
+      setNotice("Couldn’t copy the product link. Check your browser’s clipboard permissions.");
+    }
   }
 
   function changeQuantity(id: string, change: number) {
@@ -477,7 +555,7 @@ export default function Marketplace() {
           <div className="product-grid">
             {filtered.map((product, index) => (
               <article className="product-card" key={product.id}>
-                <button className="product-image-wrap" onClick={() => setSelected(product)} aria-label={`View ${product.name}`}>
+                <button className="product-image-wrap" onClick={() => showProductDetails(product)} aria-label={`View ${product.name}`}>
                   <span className="product-image-fallback" aria-hidden="true">{product.category}</span>
                   <Image
                     className="product-image"
@@ -495,7 +573,7 @@ export default function Marketplace() {
                 <button className={`favorite-button ${liked.includes(product.id) ? "liked" : ""}`} onClick={() => toggleLiked(product.id)} aria-label={liked.includes(product.id) ? "Remove from saved finds" : "Save this find"}>
                   <Heart size={17} fill={liked.includes(product.id) ? "currentColor" : "none"} />
                 </button>
-                <button className="product-info" onClick={() => setSelected(product)}>
+                <button className="product-info" onClick={() => showProductDetails(product)}>
                   <span className="product-category">{product.category}</span>
                   <span className="product-name">{product.name}</span>
                   <span className="product-meta"><span><Star size={12} fill="currentColor" /> {product.rating} <small>({product.reviews})</small></span><span className="seller-by">by {product.seller}</span></span>
@@ -578,11 +656,159 @@ export default function Marketplace() {
         </aside>
       </div>}
 
-      {selected && <div className="overlay modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
-        <section className="product-modal" aria-label={selected.name}>
-          <button className="close-button modal-close" onClick={() => setSelected(null)} aria-label="Close details"><X size={21} /></button>
-          <div className="modal-image" style={{ backgroundImage: `url("${selected.image.startsWith("https://") ? selected.image : productImage(selected.image)}")` }} />
-          <div className="modal-details"><span className="eyebrow">{selected.category} · MADE BY {selected.seller.toUpperCase()}</span><h2>{selected.name}</h2><span className="modal-rating"><span className="stars">★★★★★</span> {selected.rating} <small>({selected.reviews} reviews)</small></span><p>{selected.description}</p><div className="modal-price"><b>{money(selected.price)}</b><s>{money(selected.compareAt)}</s><span>Save {money(selected.compareAt - selected.price)}</span></div><button className="button button-dark modal-add" onClick={() => { addToCart(selected); setSelected(null); }}>Add to your bag <Plus size={16} /></button><div className="modal-delivery"><Truck size={16} /><span>Free shipping on orders $75+<small>Estimated delivery in 3–5 business days</small></span></div><div className="seller-promise"><ShieldCheck size={16} /><span>From a human-approved independent shop.</span></div></div>
+      {selected && <div className="overlay product-detail-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedProduct(null); }}>
+        <section className="product-modal product-detail-modal" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
+          <header className="detail-topbar">
+            <Link href="/" className="brand" onClick={() => setSelectedProduct(null)} aria-label="Elliot’s Global home">
+              <span className="brand-mark">eg<span>.</span></span>
+              <span className="brand-name">elliot&apos;s<span>global</span></span>
+            </Link>
+            <span className="detail-breadcrumb">THE MARKET <span>/</span> {selected.category.toUpperCase()}</span>
+            <button className="close-button" onClick={() => setSelectedProduct(null)} aria-label="Close product details"><X size={20} /></button>
+          </header>
+          <div className="product-detail-content">
+            <section className="detail-gallery" aria-label="Product images">
+              <div className="detail-gallery-rail" aria-label="Image zoom">
+                {[1, 1.25, 1.5].map((zoom) => (
+                  <button
+                    className={`detail-thumbnail ${galleryZoom === zoom ? "active" : ""}`}
+                    key={zoom}
+                    onClick={() => setGalleryZoom(zoom)}
+                    aria-label={`View product at ${zoom} times zoom`}
+                    aria-pressed={galleryZoom === zoom}
+                  >
+                    <span className="detail-thumbnail-image">
+                      <Image
+                        src={selected.image.startsWith("https://") ? selected.image : productImage(selected.image, 180)}
+                        alt=""
+                        fill
+                        unoptimized
+                        style={{ transform: `scale(${zoom})` }}
+                      />
+                    </span>
+                    <small>{zoom}×</small>
+                  </button>
+                ))}
+              </div>
+              <div className="detail-image-stage">
+                <Image
+                  className="detail-main-image"
+                  src={selected.image.startsWith("https://") ? selected.image : productImage(selected.image, 1000)}
+                  alt={selected.name}
+                  fill
+                  priority
+                  unoptimized
+                  sizes="(max-width: 760px) 100vw, 40vw"
+                  style={{ transform: `scale(${galleryZoom})` }}
+                  onError={(event) => { event.currentTarget.style.display = "none"; }}
+                />
+                <div className="detail-image-actions">
+                  <button onClick={() => void shareProduct(selected)} aria-label="Copy product link"><Share2 size={17} /></button>
+                  <button
+                    className={liked.includes(selected.id) ? "saved" : ""}
+                    onClick={() => toggleLiked(selected.id)}
+                    aria-label={liked.includes(selected.id) ? "Remove from saved finds" : "Save this find"}
+                  >
+                    <Heart size={18} fill={liked.includes(selected.id) ? "currentColor" : "none"} />
+                  </button>
+                  <button onClick={() => setGalleryZoom((current) => current >= 1.5 ? 1 : current === 1 ? 1.25 : 1.5)} aria-label="Zoom product image">
+                    <ZoomIn size={18} />
+                  </button>
+                </div>
+                {selected.badge && <span className="detail-image-badge">{selected.badge}</span>}
+              </div>
+            </section>
+
+            <section className="detail-information">
+              <span className="eyebrow"><span className="eyebrow-dot" /> A FIND FROM {selected.seller.toUpperCase()}</span>
+              <h1 id="product-detail-title">{selected.name}</h1>
+              <div className="detail-rating">
+                <span className="stars" aria-label={`${selected.rating} out of 5 stars`}>★★★★★</span>
+                <b>{selected.rating.toFixed(1)}</b>
+                <span>({selected.reviews.toLocaleString()} ratings)</span>
+                <button onClick={() => {
+                  if (!openProductSections.includes("reviews")) toggleProductSection("reviews");
+                  document.getElementById("detail-reviews")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}>Reviews</button>
+              </div>
+              <div className="detail-accordions">
+                <section className="detail-accordion">
+                  <h2>
+                    <button aria-expanded={openProductSections.includes("about")} aria-controls="detail-about" onClick={() => toggleProductSection("about")}>
+                      About this find {openProductSections.includes("about") ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                  </h2>
+                  {openProductSections.includes("about") && <div className="detail-accordion-body" id="detail-about">
+                    <p>{selected.description}</p>
+                    <ul>
+                      <li>Thoughtfully found in {selected.category.toLowerCase()}.</li>
+                      <li>Sold by {selected.seller}, an independent shop.</li>
+                      <li>Every purchase supports the people behind small businesses.</li>
+                    </ul>
+                  </div>}
+                </section>
+                <section className="detail-accordion">
+                  <h2>
+                    <button aria-expanded={openProductSections.includes("seller")} aria-controls="detail-seller" onClick={() => toggleProductSection("seller")}>
+                      Meet the maker {openProductSections.includes("seller") ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                  </h2>
+                  {openProductSections.includes("seller") && <div className="detail-accordion-body detail-seller-body" id="detail-seller">
+                    <span className="detail-maker-avatar">{selected.seller.slice(0, 1).toUpperCase()}</span>
+                    <p><b>{selected.seller}</b><br />An independent shop, here for the good stuff.</p>
+                  </div>}
+                </section>
+                <section className="detail-accordion">
+                  <h2>
+                    <button aria-expanded={openProductSections.includes("shipping")} aria-controls="detail-shipping" onClick={() => toggleProductSection("shipping")}>
+                      Shipping details {openProductSections.includes("shipping") ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                  </h2>
+                  {openProductSections.includes("shipping") && <div className="detail-accordion-body" id="detail-shipping">
+                    <p>Standard shipping is $7.95 on orders under $75, and free when your order reaches $75. Your full-bag shipping total appears at checkout.</p>
+                    <p>Delivery status is available in your account after the shop updates your order.</p>
+                  </div>}
+                </section>
+                <section className="detail-accordion" id="detail-reviews">
+                  <h2>
+                    <button aria-expanded={openProductSections.includes("reviews")} aria-controls="detail-review-summary" onClick={() => toggleProductSection("reviews")}>
+                      Ratings & reviews {openProductSections.includes("reviews") ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                  </h2>
+                  {openProductSections.includes("reviews") && <div className="detail-accordion-body detail-review-body" id="detail-review-summary">
+                    <span className="detail-review-score">{selected.rating.toFixed(1)}</span>
+                    <span><span className="stars">★★★★★</span><br />{selected.reviews.toLocaleString()} community ratings</span>
+                  </div>}
+                </section>
+              </div>
+            </section>
+
+            <aside className="detail-purchase-card" aria-label="Purchase options">
+              <span className="detail-price">{money(selected.price)}</span>
+              {selected.compareAt > selected.price && <div className="detail-price-savings"><s>{money(selected.compareAt)}</s><span>Save {money(selected.compareAt - selected.price)}</span></div>}
+              <span className="detail-price-note">One-time purchase from {selected.seller}</span>
+              <div className="detail-purchase-divider" />
+              <div className="detail-purchase-choice"><span className="detail-radio selected" /><span>One-time purchase</span><b>{money(selected.price)}</b></div>
+              <label className="detail-quantity-label" htmlFor="detail-quantity">Quantity</label>
+              <div className="detail-quantity-control">
+                <button onClick={() => setDetailQuantity((current) => Math.max(current - 1, 1))} aria-label="Remove one item" disabled={detailQuantity <= 1}><Minus size={15} /></button>
+                <span id="detail-quantity" aria-live="polite">{detailQuantity}</span>
+                <button onClick={() => setDetailQuantity((current) => Math.min(current + 1, selectedQuantityLimit))} aria-label="Add one item" disabled={detailQuantity >= selectedQuantityLimit}><Plus size={15} /></button>
+              </div>
+              <button className="button button-dark detail-add-button" onClick={() => addToCart(selected, detailQuantity)} disabled={selectedQuantityLimit === 0}>
+                {selectedQuantityLimit === 0 ? "Maximum in your bag" : "Add to your bag"} <ShoppingBag size={17} />
+              </button>
+              <div className="detail-shipping-note">
+                <Truck size={18} />
+                <span><b>Good things are on their way.</b><small>{selected.price >= 75 ? "This find qualifies for free standard shipping." : `Free shipping on orders $75+. Add ${money(75 - selected.price)} to unlock it.`}</small></span>
+              </div>
+              <div className="detail-safe-note"><ShieldCheck size={16} /> Your order total is shown before checkout</div>
+              <button className={`detail-save-button ${liked.includes(selected.id) ? "saved" : ""}`} onClick={() => toggleLiked(selected.id)}>
+                <Heart size={16} fill={liked.includes(selected.id) ? "currentColor" : "none"} />
+                {liked.includes(selected.id) ? "Saved to your finds" : "Save for later"}
+              </button>
+            </aside>
+          </div>
         </section>
       </div>}
 
