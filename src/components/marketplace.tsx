@@ -429,14 +429,9 @@ export default function Marketplace() {
               <span className="user-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
             </Link>
           ) : (
-            <>
-              <button className="icon-button account-button" onClick={() => { setAuthMode("login"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); setAccountOpen(true); }} aria-label="Sign in or create account">
-                <span className="user-avatar">E</span>
-              </button>
-              <button className="join-signup-button" onClick={() => { setSignupRole("shopper"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); setAccountOpen(true); }}>
-                Register / Sign up <ChevronDown size={13} />
-              </button>
-            </>
+            <button className="join-signup-button" onClick={() => { setSignupRole("shopper"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); setAccountOpen(true); }}>
+              Register / Sign up <ChevronDown size={13} />
+            </button>
           )}
           <button
             className={`bag-button ${itemCount ? "bag-button-has-items" : ""}`}
