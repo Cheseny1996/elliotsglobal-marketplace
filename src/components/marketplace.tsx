@@ -31,7 +31,7 @@ type User = {
   storeName?: string;
 } | null;
 type CartLine = { id: string; quantity: number };
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 type ProductSort = "featured" | "price-low" | "price-high" | "top-rated";
 
 const money = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
@@ -51,7 +51,9 @@ export default function Marketplace() {
   const [signupRole, setSignupRole] = useState<"shopper" | "seller">("shopper");
   const [adminLogin, setAdminLogin] = useState(false);
   const [user, setUser] = useState<User>(null);
+  const [authEmail, setAuthEmail] = useState("");
   const [authError, setAuthError] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -97,6 +99,11 @@ export default function Marketplace() {
         setAuthMode("register");
         setAccountOpen(true);
         setNotice("");
+        window.history.replaceState({}, "", "/");
+      } else if (params.get("signin") === "1") {
+        setAuthMode("login");
+        setAdminLogin(false);
+        setAccountOpen(true);
         window.history.replaceState({}, "", "/");
       }
       setPreferencesLoaded(true);
@@ -229,13 +236,22 @@ export default function Marketplace() {
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setAuthError("");
+    setAuthMessage("");
     try {
-      const response = await fetch(`/api/auth/${authMode === "login" ? "login" : "register"}`, {
+      const endpoint = authMode === "login" ? "login" : authMode === "register" ? "register" : "password/forgot";
+      const response = await fetch(`/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(Object.fromEntries(form.entries())),
       });
       const result = await response.json().catch(() => null) as { user?: NonNullable<User>; error?: string; message?: string } | null;
+      if (authMode === "forgot") {
+        if (!response.ok) {
+          throw new Error(result?.error ?? "Password recovery is temporarily unavailable. Please try again later.");
+        }
+        setAuthMessage(result?.message ?? "If an account exists for that email, we’ll send a password reset link shortly.");
+        return;
+      }
       if (!response.ok || !result?.user) {
         throw new Error(result?.error ?? (response.ok
           ? "The account service returned an invalid response."
@@ -260,6 +276,7 @@ export default function Marketplace() {
       setAuthMode("login");
       setAccountOpen(true);
       setAuthError("Sign in or create an account to check out.");
+      setAuthMessage("");
       return;
     }
     setBusy(true);
@@ -319,7 +336,7 @@ export default function Marketplace() {
               <span className="user-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
             </Link>
           ) : (
-            <button className="icon-button account-button" onClick={() => { setAuthMode("login"); setAdminLogin(false); setAccountOpen(true); }} aria-label="Sign in or create account">
+            <button className="icon-button account-button" onClick={() => { setAuthMode("login"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); setAccountOpen(true); }} aria-label="Sign in or create account">
               <span className="user-avatar">E</span>
             </button>
           )}
@@ -572,7 +589,9 @@ export default function Marketplace() {
       {accountOpen && <div className="overlay modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setAccountOpen(false); }}>
         <section className="auth-modal">
           <button className="close-button modal-close" onClick={() => setAccountOpen(false)} aria-label="Close sign in"><X size={21} /></button>
-          <span className="brand-mark auth-mark">eg<span>.</span></span><span className="eyebrow">GOOD TO HAVE YOU HERE</span>          <h2>{authMode === "login" ? adminLogin ? "Admin sign in." : "Welcome back." : signupRole === "seller" ? "Open your shop." : "Come on in."}</h2><p>{authMode === "login" ? adminLogin ? "Sign in with your approved administrator account." : "Your next favorite thing might be waiting." : signupRole === "seller" ? "Bring your little shop to a marketplace with a big heart." : "Join as a client and discover independent shops."}</p>
+          <span className="brand-mark auth-mark">eg<span>.</span></span><span className="eyebrow">GOOD TO HAVE YOU HERE</span>
+          <h2>{authMode === "forgot" ? "Reset your password." : authMode === "login" ? adminLogin ? "Admin sign in." : "Welcome back." : signupRole === "seller" ? "Open your shop." : "Come on in."}</h2>
+          <p>{authMode === "forgot" ? "Enter the email address linked to your account, and we’ll send you a one-time reset link." : authMode === "login" ? adminLogin ? "Sign in with your approved administrator account." : "Your next favorite thing might be waiting." : signupRole === "seller" ? "Bring your little shop to a marketplace with a big heart." : "Join as a client and discover independent shops."}</p>
           {authMode === "register" ? (
             <div className="join-role-picker" aria-label="Choose how to join">
               <button type="button" className={`join-role-card ${signupRole === "shopper" ? "selected" : ""}`} aria-pressed={signupRole === "shopper"} onClick={() => setSignupRole("shopper")}>
@@ -586,25 +605,27 @@ export default function Marketplace() {
                 <span className="join-role-check">{signupRole === "seller" ? <Check size={14} /> : null}</span>
               </button>
             </div>
-          ) : (
+          ) : authMode === "login" ? (
             <div className="account-entry-options">
               <span>New here? Join as a</span>
-              <button type="button" onClick={() => { setSignupRole("shopper"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); }}>client</button>
+              <button type="button" onClick={() => { setSignupRole("shopper"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); }}>client</button>
               <span>or</span>
-              <button type="button" onClick={() => { setSignupRole("seller"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); }}>vendor</button>
+              <button type="button" onClick={() => { setSignupRole("seller"); setAuthMode("register"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); }}>vendor</button>
             </div>
-          )}
+          ) : null}
           <form onSubmit={submitAuth} className="auth-form">
             {authMode === "register" && <><label>Your name<input name="name" autoComplete="name" required minLength={2} maxLength={100} /></label></>}
-            <label>Email address<input name="email" type="email" autoComplete="email" required /></label>
-            <label>Password<input name="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} required minLength={authMode === "login" ? 1 : 12} maxLength={128} />{authMode === "register" && <small>Use at least 12 characters.</small>}</label>
+            <label>Email address<input name="email" type="email" autoComplete="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label>
+            {authMode !== "forgot" && <label>Password<input name="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} required minLength={authMode === "login" ? 1 : 12} maxLength={128} />{authMode === "register" && <small>Use at least 12 characters.</small>}</label>}
+            {authMode === "login" && <button className="password-reset-link" type="button" onClick={() => { setAuthMode("forgot"); setAuthError(""); setAuthMessage(""); }}>Forgot password?</button>}
             {authMode === "register" && <input type="hidden" name="role" value={signupRole} />}
             {authMode === "register" && signupRole === "seller" && <label>Shop name<input name="storeName" autoComplete="organization" minLength={2} maxLength={100} placeholder="Your brand name" required /></label>}
             {authError && <p className="form-error" role="alert">{authError}</p>}
-            <button className="button button-dark auth-submit" disabled={busy}>{busy ? "One moment…" : authMode === "login" ? adminLogin ? "Sign in to admin" : "Sign in" : signupRole === "seller" ? "Apply as a vendor" : "Create client account"} <ArrowRight size={16} /></button>
+            {authMessage && <p className="form-success" role="status">{authMessage}</p>}
+            <button className="button button-dark auth-submit" disabled={busy}>{busy ? "One moment…" : authMode === "forgot" ? "Send reset link" : authMode === "login" ? adminLogin ? "Sign in to admin" : "Sign in" : signupRole === "seller" ? "Apply as a vendor" : "Create client account"} <ArrowRight size={16} /></button>
           </form>
-          <div className="auth-switch">{authMode === "login" ? "New around here?" : "Already have an account?"}<button onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAdminLogin(false); setAuthError(""); }}>{authMode === "login" ? "Create an account" : "Sign in"}</button></div>
-          <button
+          <div className="auth-switch">{authMode === "forgot" ? "Remembered your password?" : authMode === "login" ? "New around here?" : "Already have an account?"}<button onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAdminLogin(false); setAuthError(""); setAuthMessage(""); }}>{authMode === "forgot" ? "Back to sign in" : authMode === "login" ? "Create an account" : "Sign in"}</button></div>
+          {authMode !== "forgot" && <button
             className="admin-login-link"
             type="button"
             onClick={() => {
@@ -615,10 +636,11 @@ export default function Marketplace() {
                 setAdminLogin(true);
               }
               setAuthError("");
+              setAuthMessage("");
             }}
           >
             {adminLogin ? "Back to client sign in" : "Admin? Sign in to your console"}
-          </button>
+          </button>}
           {authMode === "register" && signupRole === "seller" && <small className="seller-approval-note"><ShieldCheck size={14} /> Vendor applications are reviewed before listings can go live. Admin access is invite-only.</small>}
         </section>
       </div>}

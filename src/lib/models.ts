@@ -11,6 +11,9 @@ export type UserRecord = {
   name: string;
   email: string;
   passwordHash: string;
+  passwordResetTokenHash?: string;
+  passwordResetExpiresAt?: Date;
+  passwordResetRequestedAt?: Date;
   role: UserRole;
   sellerStatus: SellerStatus;
   storeName?: string;
@@ -70,6 +73,9 @@ const userSchema = new Schema<UserRecord>(
     name: { type: String, required: true, trim: true, maxlength: 100 },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
+    passwordResetTokenHash: { type: String, select: false, index: true, sparse: true },
+    passwordResetExpiresAt: { type: Date, select: false },
+    passwordResetRequestedAt: { type: Date, select: false },
     role: { type: String, enum: ["shopper", "seller", "admin"], required: true },
     sellerStatus: {
       type: String,

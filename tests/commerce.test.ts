@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateSellerSplit, getCommissionPercent, getShippingCents } from "../src/lib/commerce";
 import { categories, demoProducts } from "../src/lib/catalog";
-import { cartSchema, productSchema, registerSchema } from "../src/lib/validation";
+import {
+  cartSchema,
+  passwordResetRequestSchema,
+  passwordResetSchema,
+  productSchema,
+  registerSchema,
+} from "../src/lib/validation";
 
 test("catalog preview spans the planned departments with a broad sample range", () => {
   assert.equal(demoProducts.length, 36);
@@ -39,6 +45,15 @@ test("seller application requires a shop name and strong password", () => {
   assert.equal(registerSchema.safeParse({ ...base, storeName: "Sunny Studio", password: "short" }).success, false);
   assert.equal(registerSchema.safeParse({ ...base, role: "shopper" }).success, true);
   assert.equal(registerSchema.safeParse({ ...base, role: "admin", storeName: "Admin Shop" }).success, false);
+});
+
+test("password recovery validates email, one-time tokens, and strong replacement passwords", () => {
+  const token = "a".repeat(64);
+  assert.equal(passwordResetRequestSchema.safeParse({ email: "shopper@example.com" }).success, true);
+  assert.equal(passwordResetRequestSchema.safeParse({ email: "not-an-email" }).success, false);
+  assert.equal(passwordResetSchema.safeParse({ token, password: "a-secure-password-2026" }).success, true);
+  assert.equal(passwordResetSchema.safeParse({ token: "short", password: "a-secure-password-2026" }).success, false);
+  assert.equal(passwordResetSchema.safeParse({ token, password: "too-short" }).success, false);
 });
 
 test("product schema only accepts HTTPS images from approved CDN hosts", () => {

@@ -28,28 +28,29 @@ Open [http://localhost:3000](http://localhost:3000). Without MongoDB and Stripe 
 1. Create a MongoDB Atlas database and a database user with only the permissions this application needs. Allow connections from your development/deployment host. Set the full connection URI in `.env.local`.
 2. Copy `.env.example` to `.env.local`; set a unique random `SESSION_SECRET` of at least 32 characters, `MONGODB_URI`, `APP_URL`, and `PLATFORM_COMMISSION_PERCENT=15`.
 3. Create a Stripe account and configure test mode first. Set `STRIPE_SECRET_KEY` in `.env.local`. Never use a publishable key as the server secret, and never commit `.env.local`.
-4. Provision the first admin account using a strong, unique password of at least 16 characters:
+4. Configure Resend for password recovery. Verify a sender domain, then set `RESEND_API_KEY` and `EMAIL_FROM` in `.env.local` (or the deployment environment). Reset requests use one-time links that expire after 30 minutes. Without these values, the forgot-password form reports that email delivery is not configured.
+5. Provision the first admin account using a strong, unique password of at least 16 characters:
 
    ```bash
    npm run seed:admin
    ```
 
    This reads `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env.local`. There is no public admin signup. Sign in through the storefront account form; the Admin desk is then available from the account menu.
-5. To populate the live database with the 18 sample listings, create a seller account, approve it from the Admin desk, set its email as `CATALOG_SELLER_EMAIL` in `.env.local`, then run:
+6. To populate the live database with the 18 sample listings, create a seller account, approve it from the Admin desk, set its email as `CATALOG_SELLER_EMAIL` in `.env.local`, then run:
 
    ```bash
    npm run seed:catalog
    ```
 
    The command is idempotent and only attaches sample listings to an already approved seller. Listings created by sellers through the studio always require admin review.
-6. For local Stripe webhooks, install the Stripe CLI, then forward events:
+7. For local Stripe webhooks, install the Stripe CLI, then forward events:
 
    ```bash
    stripe listen --forward-to localhost:3000/api/webhooks/stripe
    ```
 
    Copy the CLI's signing secret into `STRIPE_WEBHOOK_SECRET`. At minimum, handle `checkout.session.completed` and `checkout.session.expired`.
-7. Test a shopper signup, a Stripe test-mode checkout, the account order history, seller approval, product review, fulfillment status, and a manual payout with its transfer reference.
+8. Test password recovery, a shopper signup, a Stripe test-mode checkout, the account order history, seller approval, product review, fulfillment status, and a manual payout with its transfer reference.
 
 ## Environment variables
 
@@ -58,6 +59,8 @@ Open [http://localhost:3000](http://localhost:3000). Without MongoDB and Stripe 
 | `MONGODB_URI` | Yes for live features | MongoDB Atlas connection string |
 | `SESSION_SECRET` | Yes for authentication | Random signing secret, 32+ characters |
 | `APP_URL` | Yes for checkout | Exact public app origin, e.g. `https://shop.example.com` |
+| `RESEND_API_KEY` | Yes for password recovery | Resend server API key; never expose it to browser code |
+| `EMAIL_FROM` | Yes for password recovery | Sender address on a domain verified with Resend |
 | `STRIPE_SECRET_KEY` | Yes for checkout | Stripe server-side test/live key |
 | `STRIPE_WEBHOOK_SECRET` | Yes for payment status | Stripe webhook signature verification |
 | `PLATFORM_COMMISSION_PERCENT` | No | Marketplace share, defaults to 15; allowed range 0–30 |
@@ -72,8 +75,9 @@ Use the Stripe test keys and test cards during development. Do not copy secret k
 - `/` — storefront, Black Friday feature, product catalog and shopper signup
 - `/account` — shopper order history
 - `/seller` — seller application information or seller studio
+- `/reset-password` — set a new password from a one-time email link
 - `/admin` — admin desk (requires a seeded admin account)
-- `/api/auth/*` — registration, sign-in, session and sign-out
+- `/api/auth/*` — registration, sign-in, session, sign-out, and password recovery
 - `/api/products` — live catalog and approved seller product submissions
 - `/api/checkout` — authenticated cart validation, stock reservation and Stripe Checkout
 - `/api/checkout/cancel` — authenticated expiry of a cancelled checkout session
@@ -91,7 +95,7 @@ npm run build
 
 ## Before accepting real orders
 
-This is a working marketplace foundation, but live commerce still needs operational decisions and configuration: verified email/password recovery, rate limiting/WAF protection for account and checkout routes, a tax calculation/filing policy, seller terms and identity checks, return/refund handling, shipping labels and tracking, privacy/retention policies, and production monitoring. Stripe currently charges the platform account; seller payouts are **manual**. The admin desk records payout amounts and transfer references but does not initiate bank transfers. The commission is calculated from merchandise only; shipping is collected by Stripe and is not included in seller payout. Stripe processing fees are paid by the platform and are not deducted again from seller net. No tax is currently calculated. Confirm legal, tax, fraud, shipping, and Stripe eligibility requirements before switching to live payments.
+This is a working marketplace foundation, but live commerce still needs operational decisions and configuration: verified email deliverability for password recovery, rate limiting/WAF protection for account and checkout routes, a tax calculation/filing policy, seller terms and identity checks, return/refund handling, shipping labels and tracking, privacy/retention policies, and production monitoring. Stripe currently charges the platform account; seller payouts are **manual**. The admin desk records payout amounts and transfer references but does not initiate bank transfers. The commission is calculated from merchandise only; shipping is collected by Stripe and is not included in seller payout. Stripe processing fees are paid by the platform and are not deducted again from seller net. No tax is currently calculated. Confirm legal, tax, fraud, shipping, and Stripe eligibility requirements before switching to live payments.
 
 ## Deployment
 

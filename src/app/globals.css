@@ -331,12 +331,30 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .auth-form label > small { color: var(--muted); font-size: 9px; font-weight: 400; }
 .auth-submit { width: 100%; justify-content: space-between; margin-top: 3px; }
 .form-error { margin: -2px 0 0; color: #b33e2b; font-size: 10px; line-height: 1.5; }
+.form-success { margin: -2px 0 0; color: #536c46; font-size: 10px; line-height: 1.5; }
+.password-reset-link { justify-self: end; padding: 0; border: 0; background: transparent; color: var(--orange-dark); cursor: pointer; font-size: 9px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .auth-switch { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 20px; color: var(--muted); font-size: 10px; }
 .auth-switch button { padding: 3px; border: 0; background: transparent; color: var(--orange-dark); cursor: pointer; font-size: 10px; font-weight: 600; }
 .seller-approval-note { display: flex; align-items: center; gap: 7px; margin-top: 16px; color: #738166; font-size: 9px; line-height: 1.5; }
+.reset-password-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.reset-password-card { width: min(440px, 100%); padding: 38px; border: 1px solid var(--line); background: var(--white); box-shadow: 0 18px 60px #30291d0d; }
+.reset-password-mark { margin-bottom: 25px; }
+.reset-password-card h1 { margin: 11px 0 7px; font-family: var(--serif); font-size: 34px; font-weight: 500; letter-spacing: -.05em; }
+.reset-password-card > p { margin: 0 0 23px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.reset-password-form { display: grid; gap: 14px; }
+.reset-password-form label { display: grid; gap: 6px; font-size: 10px; font-weight: 600; }
+.reset-password-form input { width: 100%; height: 41px; padding: 0 11px; border: 1px solid #dcd7ca; background: #fffefa; color: var(--ink); font-size: 11px; }
+.reset-password-form label small { color: var(--muted); font-size: 9px; font-weight: 400; }
+.reset-password-form > button { width: 100%; justify-content: space-between; margin-top: 3px; }
+.reset-password-form > button:disabled { opacity: .65; cursor: wait; transform: none; }
+.reset-password-complete { display: grid; gap: 12px; }
+.reset-password-complete p { margin: 0; color: #536c46; font-size: 11px; line-height: 1.6; }
+.reset-password-complete .form-error { color: #b33e2b; }
+.reset-password-complete .button { justify-content: space-between; }
 
 @media (max-width: 480px) {
   .auth-modal { padding: 32px 22px 24px; }
+  .reset-password-card { padding: 32px 23px 26px; }
   .join-role-picker { gap: 6px; }
   .join-role-card { min-height: 62px; gap: 6px; padding: 7px; }
   .join-role-icon { width: 30px; height: 30px; }

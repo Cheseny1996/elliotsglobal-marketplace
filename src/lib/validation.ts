@@ -21,6 +21,15 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().email().max(254),
+});
+
+export const passwordResetSchema = z.object({
+  token: z.string().regex(/^[a-f\d]{64}$/i),
+  password: passwordSchema,
+});
+
 export const productSchema = z.object({
   name: z.string().trim().min(3).max(120),
   description: z.string().trim().min(12).max(3000),
