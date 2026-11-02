@@ -3,6 +3,7 @@ import SellerStudio from "@/components/seller-studio";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Store } from "lucide-react";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const instant = false;
 
@@ -13,7 +14,7 @@ export default async function SellerPage() {
     if (user) redirect("/");
     return (
       <main className="seller-landing">
-        <header className="portal-header"><Link className="portal-brand" href="/"><span className="brand-mark">eg<span>.</span></span><span className="brand-name">elliot&apos;s<span>global</span></span></Link><Link href="/" className="portal-back"><ArrowLeft size={15} /> Explore the marketplace</Link></header>
+        <header className="portal-header"><BrandLogo className="portal-brand" /><Link href="/" className="portal-back"><ArrowLeft size={15} /> Explore the marketplace</Link></header>
         <section className="seller-landing-content">
           <span className="eyebrow"><Store size={13} /> YOUR LITTLE CORNER OF THE MARKET</span>
           <h1>Your good thing<br />deserves <em>to be found.</em></h1>

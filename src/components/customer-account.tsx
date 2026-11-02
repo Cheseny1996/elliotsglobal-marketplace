@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowUpRight, CircleAlert, PackageCheck, RefreshCw, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Order = {
   _id: string;
@@ -32,7 +33,7 @@ export default function CustomerAccount({ name, email }: { name: string; email: 
 
   return (
     <main className="portal-page account-page">
-      <header className="portal-header"><Link className="portal-brand" href="/"><span className="brand-mark">eg<span>.</span></span><span className="brand-name">elliot&apos;s<span>global</span></span></Link><Link href="/" className="portal-back"><ArrowLeft size={15} /> Keep looking around</Link></header>
+      <header className="portal-header"><BrandLogo className="portal-brand" /><Link href="/" className="portal-back"><ArrowLeft size={15} /> Keep looking around</Link></header>
       <div className="portal-main">
         <div className="portal-title-row"><div><span className="eyebrow"><ShieldCheck size={13} /> YOUR LITTLE CORNER</span><h1>Your <em>account.</em></h1><p>Hi {name}. Here are your good finds, all in one place.</p><span className="account-email">{email}</span></div><Link className="button button-outline" href="/">Back to shopping <ArrowUpRight size={15} /></Link></div>
         {error && <div className="portal-alert error"><CircleAlert size={16} />{error}</div>}

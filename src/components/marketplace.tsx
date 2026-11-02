@@ -26,6 +26,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { categories, categoryCollections, demoProducts, productImage, type CatalogProduct } from "@/lib/catalog";
+import { BrandLogo, BrandMark } from "@/components/brand-logo";
 
 type User = {
   name: string;
@@ -399,10 +400,7 @@ export default function Marketplace() {
       </div>
 
       <header className="site-header">
-        <Link className="brand" href="/" aria-label="Elliot’s Global home">
-          <span className="brand-mark">eg<span>.</span></span>
-          <span className="brand-name">elliot&apos;s<span>global</span></span>
-        </Link>
+        <BrandLogo />
         <div className="header-actions">
           <label className="header-search">
             <Search size={17} />
@@ -636,7 +634,7 @@ export default function Marketplace() {
 
       <footer className="footer">
         <div className="footer-main">
-          <div className="footer-brand"><a className="brand" href="#"><span className="brand-mark">eg<span>.</span></span><span className="brand-name">elliot&apos;s<span>global</span></span></a><p>A little marketplace for a lot of good things.</p><span className="footer-note">Made for people who care where their stuff comes from.</span></div>
+          <div className="footer-brand"><BrandLogo /><p>A little marketplace for a lot of good things.</p><span className="footer-note">Made for people who care where their stuff comes from.</span></div>
           <div className="footer-links"><b>THE MARKET</b><a href="#shop">Shop everything</a><a href="#categories">Departments</a><a href="#black-friday">Black Friday</a><Link href="/seller">Open a shop</Link></div>
           <div className="footer-links"><b>THE DETAILS</b><a href="#our-story">Our story</a><a href="#shipping">Shipping & returns</a><a href="#help">Help & contact</a><a href="#privacy">Privacy, please</a></div>
           <div className="footer-links footer-social"><b>GOOD COMPANY</b><a href="#instagram">Instagram <ArrowUpRight size={13} /></a><a href="#pinterest">Pinterest <ArrowUpRight size={13} /></a><a href="#tiktok">TikTok <ArrowUpRight size={13} /></a><span>Say hello: <a href="mailto:hello@elliotsglobal.com">hello@elliotsglobal.com</a></span></div>
@@ -659,10 +657,7 @@ export default function Marketplace() {
       {selected && <div className="overlay product-detail-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedProduct(null); }}>
         <section className="product-modal product-detail-modal" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
           <header className="detail-topbar">
-            <Link href="/" className="brand" onClick={() => setSelectedProduct(null)} aria-label="Elliot’s Global home">
-              <span className="brand-mark">eg<span>.</span></span>
-              <span className="brand-name">elliot&apos;s<span>global</span></span>
-            </Link>
+            <BrandLogo onClick={() => setSelectedProduct(null)} />
             <span className="detail-breadcrumb">THE MARKET <span>/</span> {selected.category.toUpperCase()}</span>
             <button className="close-button" onClick={() => setSelectedProduct(null)} aria-label="Close product details"><X size={20} /></button>
           </header>
@@ -815,7 +810,7 @@ export default function Marketplace() {
       {accountOpen && <div className="overlay modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setAccountOpen(false); }}>
         <section className="auth-modal">
           <button className="close-button modal-close" onClick={() => setAccountOpen(false)} aria-label="Close sign in"><X size={21} /></button>
-          <span className="brand-mark auth-mark">eg<span>.</span></span><span className="eyebrow">GOOD TO HAVE YOU HERE</span>
+          <BrandMark className="auth-mark" /><span className="eyebrow">GOOD TO HAVE YOU HERE</span>
           <h2>{authMode === "forgot" ? "Reset your password." : authMode === "login" ? adminLogin ? "Admin sign in." : "Welcome back." : signupRole === "seller" ? "Open your shop." : "Come on in."}</h2>
           <p>{authMode === "forgot" ? "Enter the email address linked to your account, and we’ll send you a one-time reset link." : authMode === "login" ? adminLogin ? "Sign in with your approved administrator account." : "Your next favorite thing might be waiting." : signupRole === "seller" ? "Bring your little shop to a marketplace with a big heart." : "Join as a client and discover independent shops."}</p>
           {authMode === "register" ? (

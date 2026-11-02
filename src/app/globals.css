@@ -34,10 +34,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .site-header { height: 77px; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 6.15%; border-bottom: 1px solid var(--line); background: var(--paper); }
 .brand { display: inline-flex; align-items: center; flex-shrink: 0; gap: 10px; }
-.brand-mark { width: 35px; height: 35px; display: grid; place-items: center; color: #fff9eb; background: var(--orange); font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: -.08em; }
-.brand-mark span { color: #f2bb7b; }
+.brand-mark { width: 42px; height: 42px; display: grid; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 13px; background: var(--orange); box-shadow: 0 4px 10px #a93c241c; }
+.brand-mark svg { width: 100%; height: 100%; }
+.brand-mark-bag { fill: #fff9eb; }
+.brand-mark-handle, .brand-mark-stitch { fill: none; stroke: var(--orange-dark); stroke-linecap: round; stroke-width: 2.2; }
+.brand-mark-handle { stroke: #fff9eb; stroke-width: 2.6; }
+.brand-mark-spark { fill: #f2bb7b; }
 .brand-name { display: grid; font-family: var(--serif); font-size: 19px; line-height: .87; letter-spacing: -.045em; }
-.brand-name span { margin-top: 4px; color: var(--muted); font-family: var(--mono); font-size: 8px; letter-spacing: .23em; text-transform: uppercase; }
+.brand-name span { margin-top: 5px; color: var(--muted); font-family: var(--mono); font-size: 7px; letter-spacing: .19em; text-transform: uppercase; }
 .desktop-nav { height: 100%; display: flex; align-items: center; gap: clamp(20px, 3vw, 43px); margin-left: 50px; }
 .desktop-nav a { display: inline-flex; align-items: center; gap: 5px; color: #4a4841; font-size: 12px; font-weight: 500; transition: color .18s ease; }
 .desktop-nav a:hover, .footer a:hover { color: var(--orange); }
@@ -308,7 +312,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .product-detail-overlay { position: fixed; z-index: 40; inset: 0; display: block; padding: 0; overflow-y: auto; background: var(--paper); backdrop-filter: none; }
 .product-detail-modal { position: relative; display: block; width: 100%; min-height: 100vh; max-width: none; background: var(--paper); animation: none; }
 .detail-topbar { position: sticky; z-index: 3; top: 0; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 4.5%; border-bottom: 1px solid var(--line); background: #fbf9f4f2; backdrop-filter: blur(12px); }
-.detail-topbar .brand-mark { width: 34px; height: 34px; }
+.detail-topbar .brand-mark { width: 36px; height: 36px; border-radius: 11px; }
 .detail-breadcrumb { color: #777267; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; }
 .detail-breadcrumb span { padding: 0 8px; color: #c1b9a9; }
 .product-detail-content { width: min(1540px, 100%); display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.12fr) minmax(270px, .76fr); align-items: start; gap: clamp(20px, 2.4vw, 36px); margin: 0 auto; padding: 32px 4.5% 68px; }
@@ -407,7 +411,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .seller-approval-note { display: flex; align-items: center; gap: 7px; margin-top: 16px; color: #738166; font-size: 9px; line-height: 1.5; }
 .reset-password-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
 .reset-password-card { width: min(440px, 100%); padding: 38px; border: 1px solid var(--line); background: var(--white); box-shadow: 0 18px 60px #30291d0d; }
-.reset-password-mark { margin-bottom: 25px; }
+.reset-password-mark { display: inline-flex; margin-bottom: 25px; }
 .reset-password-card h1 { margin: 11px 0 7px; font-family: var(--serif); font-size: 34px; font-weight: 500; letter-spacing: -.05em; }
 .reset-password-card > p { margin: 0 0 23px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .reset-password-form { display: grid; gap: 14px; }
@@ -475,8 +479,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .countdown-part b { font-size: 8px; }
   .countdown-part small { font-size: 6px; }
   .site-header { height: 66px; padding: 0 5%; }
-  .brand { gap: 7px; }
-  .brand-mark { width: 31px; height: 31px; font-size: 15px; }
+  .brand { gap: 8px; }
+  .brand-mark { width: 36px; height: 36px; border-radius: 11px; }
   .brand-name { font-size: 16px; }
   .site-header { position: relative; gap: 8px; }
   .header-actions { flex: 0 0 auto; gap: 12px; }
@@ -617,7 +621,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .portal-page, .seller-landing { min-height: 100vh; background: #f4f1e9; }
 .portal-header { height: 67px; display: flex; align-items: center; justify-content: space-between; padding: 0 7%; border-bottom: 1px solid var(--line); background: var(--paper); }
 .portal-brand { display: inline-flex; align-items: center; gap: 9px; }
-.portal-brand .brand-mark { width: 31px; height: 31px; font-size: 15px; }
+.portal-brand .brand-mark { width: 36px; height: 36px; border-radius: 11px; }
 .portal-brand .brand-name { font-size: 16px; }
 .portal-back { display: inline-flex; align-items: center; gap: 7px; color: #777267; font-size: 10px; }
 .portal-back:hover { color: var(--orange-dark); }

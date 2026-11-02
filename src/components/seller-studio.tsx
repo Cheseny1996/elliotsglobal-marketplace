@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, Check, CircleAlert, PackagePlus, Pencil, Shiel
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { categories } from "@/lib/catalog";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Product = {
   _id: string;
@@ -113,7 +114,7 @@ export default function SellerStudio() {
 
   return (
     <main className="portal-page">
-      <header className="portal-header"><Link className="portal-brand" href="/"><span className="brand-mark">eg<span>.</span></span><span className="brand-name">elliot&apos;s<span>global</span></span></Link><Link href="/" className="portal-back"><ArrowLeft size={15} /> Back to the marketplace</Link></header>
+      <header className="portal-header"><BrandLogo className="portal-brand" /><Link href="/" className="portal-back"><ArrowLeft size={15} /> Back to the marketplace</Link></header>
       <div className="portal-main">
         <div className="portal-title-row"><div><span className="eyebrow"><Store size={13} /> YOUR LITTLE CORNER OF THE MARKET</span><h1>Seller <em>studio.</em></h1><p>Manage your shop, keep listings fresh, and follow your sales.</p></div><a className="button button-outline" href="#product-form">Add a product <PackagePlus size={16} /></a></div>
         {error && <div className="portal-alert error"><CircleAlert size={16} />{error}</div>}

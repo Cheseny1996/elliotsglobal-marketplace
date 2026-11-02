@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowUpRight, Check, CircleAlert, PackageCheck, ShieldCheck, Store, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Overview = {
   pendingSellers: Array<{ _id: string; name: string; email: string; storeName?: string; createdAt: string }>;
@@ -61,7 +62,7 @@ export default function AdminConsole() {
 
   return (
     <main className="portal-page admin-page">
-      <header className="portal-header"><Link className="portal-brand" href="/"><span className="brand-mark">eg<span>.</span></span><span className="brand-name">elliot&apos;s<span>global</span></span></Link><Link href="/" className="portal-back"><ArrowLeft size={15} /> Back to the marketplace</Link></header>
+      <header className="portal-header"><BrandLogo className="portal-brand" /><Link href="/" className="portal-back"><ArrowLeft size={15} /> Back to the marketplace</Link></header>
       <div className="portal-main">
         <div className="portal-title-row"><div><span className="eyebrow"><ShieldCheck size={13} /> THE PEOPLE BEHIND THE MARKET</span><h1>Admin <em>desk.</em></h1><p>Welcome in. Here’s what needs a thoughtful look today.</p></div><span className="admin-access"><span /> ADMIN ACCESS</span></div>
         {error && <div className="portal-alert error"><CircleAlert size={16} />{error}</div>}
